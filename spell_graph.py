@@ -96,6 +96,7 @@ FONT = {
 # GitHub dark-theme palette.
 BG, EMPTY = "#0d1117", "#161b22"
 LEVELS = ["#0e4429", "#006d32", "#26a641", "#39d353"]  # L1..L4 greens
+FG, FG_MUTED = "#e6edf3", "#7d8590"  # header text / muted month+day labels
 
 
 def glyphs(word):
@@ -137,8 +138,11 @@ def _rounded(ax, x, y, color):
         boxstyle="round,pad=0,rounding_size=0.18", linewidth=0, facecolor=color))
 
 
-def render_preview(counts, out):
-    """Organic full-year graph: varied greens (by quartile) + faint noise, 53×7."""
+def render_preview(counts, cfg, out):
+    """A real-looking contribution chart PNG — the organic 53×7 graph plus the
+    GitHub chrome (month headers, Mon/Wed/Fri labels, 'N contributions in YEAR'
+    heading, and the Less→More legend). Use it straight, no commits needed."""
+    import calendar
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -150,17 +154,54 @@ def render_preview(counts, out):
         q = n / mx
         return LEVELS[0] if q <= .25 else LEVELS[1] if q <= .5 else LEVELS[2] if q <= .75 else LEVELS[3]
 
-    fig = plt.figure(figsize=(53 * 0.22, 7 * 0.22 + 0.6), dpi=200)
+    year = cfg.years[0]
+    fs = first_sunday(year)
+
+    def date_of(r, c):
+        return fs + timedelta(weeks=c, days=r)
+
+    total = sum(n for (r, c), n in counts.items() if date_of(r, c).year == year)
+
+    # Extra room: top for heading+months, left for weekday labels, bottom for legend.
+    fig = plt.figure(figsize=(58 * 0.22, 12 * 0.22), dpi=200)
     ax = fig.add_axes([0, 0, 1, 1])
     ax.set_facecolor(BG)
     fig.patch.set_facecolor(BG)
-    ax.set_xlim(-1, 54)
-    ax.set_ylim(-1, 8)
+    ax.set_xlim(-6, 54)
+    ax.set_ylim(-3.4, 9.6)
     ax.invert_yaxis()
     ax.axis("off")
+
+    # Squares — days outside the target year stay blank (like GitHub's year view).
     for c in range(53):
         for r in range(7):
+            if date_of(r, c).year != year:
+                continue
             _rounded(ax, c, r, color(counts.get((r, c), 0)))
+
+    # Heading, e.g. "137 contributions in 2019".
+    ax.text(-5, -2.5, f"{total} contributions in {year}",
+            color=FG, fontsize=9, ha="left", va="center")
+
+    # Month labels at the first column each month appears in.
+    seen = set()
+    for c in range(53):
+        d = date_of(0, c)
+        if d.year == year and d.month not in seen:
+            seen.add(d.month)
+            ax.text(c + 0.1, -0.6, calendar.month_abbr[d.month],
+                    color=FG_MUTED, fontsize=7, ha="left", va="center")
+
+    # Weekday labels (GitHub shows only Mon/Wed/Fri).
+    for r, lbl in ((1, "Mon"), (3, "Wed"), (5, "Fri")):
+        ax.text(-0.6, r + 0.5, lbl, color=FG_MUTED, fontsize=6.5, ha="right", va="center")
+
+    # Legend: Less [] [] [] [] [] More.
+    ax.text(41.4, 8.5, "Less", color=FG_MUTED, fontsize=6.5, ha="right", va="center")
+    for i, col in enumerate([EMPTY, *LEVELS]):
+        _rounded(ax, 42 + i, 8, col)
+    ax.text(48.4, 8.5, "More", color=FG_MUTED, fontsize=6.5, ha="left", va="center")
+
     fig.savefig(out, facecolor=BG)
     print(f"preview -> {os.path.abspath(out)}")
 
@@ -308,7 +349,7 @@ def main():
         out = cfg.out or f"{slug}-graph-preview.png"
         print(f"word={word} year={span}  lit+noise cells={len(counts)}  "
               f"total commits≈{sum(counts.values())}")
-        render_preview(counts, out)
+        render_preview(counts, cfg, out)
         print("(dry run — rerun with --commit to build the repo, or --banner for the flat banner)")
 
 

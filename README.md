@@ -27,8 +27,9 @@ pip install -r requirements.txt
 ```
 
 ```bash
-# Organic year-graph preview (varied greens + faint noise) — a PNG, no commits
-python3 spell_graph.py
+# Full contribution-chart PNG — month headers, weekday + "N contributions in
+# YEAR" labels, the Less→More legend. Looks like a real profile; no commits.
+python3 spell_graph.py --year 2019
 
 # Flat, bright LinkedIn banner at the exact 4:1 ratio — a PNG, no commits
 python3 spell_graph.py --banner
@@ -49,15 +50,22 @@ Both PNGs land in the current directory (`dennis-graph-preview.png`,
 
 ### 1. Just want the image? (recommended)
 
-If the goal is a LinkedIn banner or a graphic, you don't need GitHub at all —
-`--banner` renders a pixel-perfect PNG you upload directly. No account, no
-commits, no waiting.
+If the goal is a graphic — not live commits — you don't need GitHub at all. Two
+no-commit renders:
 
-- **LinkedIn personal banner: 1584 × 396 px (4:1).** The tool renders at 2×
-  (3168 × 792) for a crisp retina look.
-- **Safe zones:** your profile photo overlaps the **bottom-left**, and your
-  name/headline sit over the **lower strip** on desktop (mobile crops tighter).
-  Keep the letters centered and clear of that bottom-left corner.
+- **`python3 spell_graph.py --year 2019` → a full contribution chart.** Draws the
+  53×7 graph *with the real GitHub chrome*: month headers across the top,
+  Mon/Wed/Fri labels down the side, an "N contributions in YEAR" heading, and the
+  Less→More legend. The `--year` only sets the month/heading labels here (no
+  commits are made), so pick whichever year you want the image to read as. Upload
+  or share the PNG directly — it looks like a screenshot of a real profile.
+- **`python3 spell_graph.py --banner` → a LinkedIn banner** at **1584 × 396 px
+  (4:1)**, rendered at 2× (3168 × 792) for retina. Safe zones: your profile photo
+  overlaps the **bottom-left** and your name/headline sit over the **lower strip**
+  on desktop — keep the letters centered and clear of that corner.
+
+Both are dry runs; nothing touches GitHub. Use the commit route below only if you
+want the art *live* on an actual profile graph.
 
 ### 2. Want it live on a real GitHub profile?
 
