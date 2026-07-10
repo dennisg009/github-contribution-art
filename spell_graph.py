@@ -48,6 +48,7 @@ MARGIN = 10                  # left inset in weeks, to center the word in the ye
 LETTER_LO, LETTER_HI = 6, 13 # commits per lit cell -> medium..bright, varied "organic" shades
 NOISE_P, NOISE_MAX = 0.14, 3 # faint scattered "real" commits (L1) so it reads as genuine
 SEED = 7                     # reproducible layout; change for a different noise pattern
+COMMITS = None               # target total commits/year; None = natural ~1000 from per-cell shading
 REPO_DIR = "github-art"      # where --commit writes the backdated-commit repo
 # -------------------------------------------------------------------
 
@@ -128,7 +129,23 @@ def build_counts(rows, cfg):
         for c in range(53):
             if (r, c) not in counts and random.random() < NOISE_P:
                 counts[(r, c)] = random.randint(1, NOISE_MAX)
+    if getattr(cfg, "commits", None):
+        counts = scale_to_total(counts, cfg.commits)
     return counts
+
+
+def scale_to_total(counts, target):
+    """Rescale per-cell commit counts so the year's total is ~target, keeping the
+    relative shading (every lit cell stays lit — min 1 — so the word never breaks)."""
+    base = sum(counts.values())
+    if base == 0 or target <= 0:
+        return counts
+    scaled = {k: max(1, round(v * target / base)) for k, v in counts.items()}
+    got = sum(scaled.values())
+    if got > target * 1.15:  # the min-1 floor dominated: target below the word's minimum
+        print(f"note: ~{target} is fewer commits than the {got} needed to light every "
+              "cell once; showing the dimmest full-word version.")
+    return scaled
 
 
 def _rounded(ax, x, y, color):
@@ -306,6 +323,9 @@ def parse_args():
     p.add_argument("--name", default=NAME, help="git author name for --commit")
     p.add_argument("--email", default=EMAIL,
                    help="git author email for --commit (must be VERIFIED on the target account)")
+    p.add_argument("--commits", type=int, default=COMMITS, metavar="N",
+                   help="approx total commits to show in the year (scales the shading; "
+                        "default: the natural ~1000). Note: --commit builds the repo, --commits sets the count")
     p.add_argument("--margin", type=int, default=MARGIN, help="left inset in weeks (centers the word)")
     p.add_argument("--seed", type=int, default=SEED, help="RNG seed for the shade/noise layout")
     p.add_argument("--out", default=None, help="output PNG path (default derived from the word)")

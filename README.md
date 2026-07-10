@@ -38,6 +38,9 @@ python3 spell_graph.py --banner
 python3 spell_graph.py --word ALICE --banner
 python3 spell_graph.py --word OPENAI --year 2021
 
+# Dial the total number of commits shown for the year (default is ~1000)
+python3 spell_graph.py --year 2019 --commits 250
+
 # Drop the commits into a specific quiet year, or repeat across a range
 python3 spell_graph.py --commit --year 2019       # one emptier year
 python3 spell_graph.py --commit --year 2016-2019  # spanning four years
@@ -130,6 +133,11 @@ empty commits, the contributions are permanent unless you delete that repo, and
 picking a year where you *do* have activity will blend your real commits into the
 letters and muddy them. Prefer the emptiest year you can find.
 
+**Tune the volume.** The default paints ~1000 commits into the year, which is a
+lot — roughly 3/day. Use `--commits` to pick a more believable total for that
+year, e.g. `--commits 250`. It scales the shading proportionally, so the word
+still reads; it just gets dimmer as the count drops.
+
 ## Options
 
 | Flag | Default | What it does |
@@ -138,6 +146,7 @@ letters and muddy them. Prefer the emptiest year you can find.
 | `--banner` | — | Render the flat 4:1 LinkedIn banner instead of the organic graph |
 | `--commit` | — | Build `./github-art` of backdated commits to push |
 | `--year` | `2025` | Target year for the graph/commits — a single year (`2019`) or an inclusive range (`2016-2019`) that repeats the word across each year |
+| `--commits` | auto (~1000) | Approx total commits/contributions to show in the year — scales the per-cell shading to hit it (e.g. `--commits 250`) |
 | `--name` | `Dennis Gavrilenko` | Git author name (commit mode) |
 | `--email` | `you@example.com` | Git author email — must be verified on the target account |
 | `--margin` | `10` | Left inset in weeks (centers the word in the year grid) |
