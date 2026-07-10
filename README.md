@@ -35,7 +35,11 @@ python3 spell_graph.py --banner
 
 # Spell any word (A–Z, 0–9)
 python3 spell_graph.py --word ALICE --banner
-python3 spell_graph.py --word OPENAI --year 2026
+python3 spell_graph.py --word OPENAI --year 2021
+
+# Drop the commits into a specific quiet year, or repeat across a range
+python3 spell_graph.py --commit --year 2019       # one emptier year
+python3 spell_graph.py --commit --year 2016-2019  # spanning four years
 ```
 
 Both PNGs land in the current directory (`dennis-graph-preview.png`,
@@ -78,6 +82,13 @@ result — a blank graph means no stray green in the "off" pixels.
 > **Tip:** a past year (the default, `--year 2025`) shows the whole word
 > immediately. A current year works too, but any columns past today's date fill
 > in as those weeks arrive.
+>
+> **No throwaway account?** Point `--year` at a year where your real graph is
+> quiet, so the art lands on empty squares instead of colliding with existing
+> commits — `--year 2019`. Pass a range like `--year 2016-2019` to repeat the
+> word across a multi-year blank stretch (each year gets its own copy). Years
+> before GitHub existed (2008) are rejected; future years warn, since those
+> squares only fill in as their dates arrive.
 
 ## Options
 
@@ -86,7 +97,7 @@ result — a blank graph means no stray green in the "off" pixels.
 | `--word` | `DENNIS` | Word to spell (A–Z, 0–9; unknown chars become spaces) |
 | `--banner` | — | Render the flat 4:1 LinkedIn banner instead of the organic graph |
 | `--commit` | — | Build `./github-art` of backdated commits to push |
-| `--year` | `2025` | Target year for the graph/commits |
+| `--year` | `2025` | Target year for the graph/commits — a single year (`2019`) or an inclusive range (`2016-2019`) that repeats the word across each year |
 | `--name` | `Dennis Gavrilenko` | Git author name (commit mode) |
 | `--email` | `you@example.com` | Git author email — must be verified on the target account |
 | `--margin` | `10` | Left inset in weeks (centers the word in the year grid) |

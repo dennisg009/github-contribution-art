@@ -16,8 +16,15 @@ a word. This tool renders that art three ways:
 
 Spell any word (uppercase A–Z and 0–9 supported):
 
-    python3 spell_graph.py --word ALICE --year 2026
+    python3 spell_graph.py --word ALICE --year 2021
     python3 spell_graph.py --word OPENAI --banner
+
+Pick the year that lands your art on an empty patch of graph — handy on a real
+account with a crowded recent history and no throwaway to fall back on. Point
+--year at a quiet past year, or give a range to repeat the word across several:
+
+    python3 spell_graph.py --commit --year 2019       # one emptier year
+    python3 spell_graph.py --commit --year 2016-2019  # spanning four years
 
 For the commit route, push ./github-art to a brand-new EMPTY GitHub repo. A fresh
 throwaway account gives the cleanest letters (blank canvas). The commits are real
@@ -29,6 +36,8 @@ import random
 import subprocess
 import sys
 from datetime import date, timedelta
+
+GITHUB_BORN = 2008  # contribution graphs don't exist before GitHub did
 
 # ---------------- DEFAULTS (override via CLI flags) ----------------
 NAME = "Dennis Gavrilenko"   # git author name for --commit
@@ -182,40 +191,77 @@ def render_banner(rows, out):
     print(f"banner  -> {os.path.abspath(out)}  ({W}×{H} at {SCALE}× = {W*SCALE}×{H*SCALE})")
 
 
+def parse_years(spec):
+    """Turn '2019' or '2016-2019' (inclusive, either order) into a sorted year list."""
+    spec = str(spec).strip()
+    try:
+        if "-" in spec.lstrip("-"):  # a range like 2016-2019 (leading '-' = negative, not a range)
+            lo, hi = (int(part) for part in spec.split("-", 1))
+            lo, hi = sorted((lo, hi))
+            return list(range(lo, hi + 1))
+        return [int(spec)]
+    except ValueError:
+        sys.exit(f"error: --year expected a year or range (e.g. 2019 or 2016-2019), got '{spec}'")
+
+
+def validate_years(years):
+    """Reject pre-GitHub years; warn on future ones (which won't have filled in yet)."""
+    too_old = [y for y in years if y < GITHUB_BORN]
+    if too_old:
+        sys.exit(f"error: {too_old} predate GitHub ({GITHUB_BORN}) — the graph can't show them. "
+                 f"Pick {GITHUB_BORN} or later.")
+    future = [y for y in years if y > date.today().year]
+    if future:
+        print(f"note: {future} sit in the future — the commits are valid, but those weeks only "
+              "turn green as their dates arrive. A fully-past year shows the whole word at once.")
+
+
+def year_label(years):
+    """'2019' for one year, '2016–2019' for a contiguous span."""
+    return str(years[0]) if len(years) == 1 else f"{years[0]}–{years[-1]}"
+
+
 def first_sunday(y):
     j = date(y, 1, 1)
     return j - timedelta(days=(j.weekday() + 1) % 7)
 
 
 def generate(counts, cfg):
-    """Write REPO_DIR full of backdated empty commits (one per unit in `counts`)."""
-    def date_of(r, c):
-        return first_sunday(cfg.year) + timedelta(weeks=c, days=r)
+    """Write REPO_DIR full of backdated empty commits (one per unit in `counts`).
 
-    cells = [(r, c, n) for (r, c), n in counts.items() if date_of(r, c).year == cfg.year]
-    cells.sort(key=lambda t: date_of(t[0], t[1]))
+    The word is stamped into each year in cfg.years, so a range repeats the art
+    across a multi-year span of otherwise-empty history.
+    """
+    def date_of(y, r, c):
+        return first_sunday(y) + timedelta(weeks=c, days=r)
+
     os.makedirs(REPO_DIR, exist_ok=True)
     os.chdir(REPO_DIR)
     if not os.path.exists(".git"):
         subprocess.run(["git", "init", "-q"], check=True)
     subprocess.run(["git", "config", "user.name", cfg.name], check=True)
     subprocess.run(["git", "config", "user.email", cfg.email], check=True)
-    total = 0
-    for r, c, n in cells:
-        stamp = f"{date_of(r, c).isoformat()}T12:00:00"
-        env = {**os.environ, "GIT_AUTHOR_DATE": stamp, "GIT_COMMITTER_DATE": stamp}
-        for _ in range(n):
-            subprocess.run(["git", "commit", "--allow-empty", "-q", "-m", f"art {date_of(r, c)}"],
-                           env=env, check=True)
-            total += 1
-    print(f"\nGenerated {total} commits across {len(cells)} days in ./{REPO_DIR}  "
-          f"(email={cfg.email}, year={cfg.year})")
+    total, days = 0, 0
+    for y in cfg.years:
+        cells = [(r, c, n) for (r, c), n in counts.items() if date_of(y, r, c).year == y]
+        cells.sort(key=lambda t: date_of(y, t[0], t[1]))
+        days += len(cells)
+        for r, c, n in cells:
+            stamp = f"{date_of(y, r, c).isoformat()}T12:00:00"
+            env = {**os.environ, "GIT_AUTHOR_DATE": stamp, "GIT_COMMITTER_DATE": stamp}
+            for _ in range(n):
+                subprocess.run(["git", "commit", "--allow-empty", "-q", "-m", f"art {date_of(y, r, c)}"],
+                               env=env, check=True)
+                total += 1
+    print(f"\nGenerated {total} commits across {days} days in ./{REPO_DIR}  "
+          f"(email={cfg.email}, year={year_label(cfg.years)})")
 
 
 def parse_args():
     p = argparse.ArgumentParser(description="Spell a word in a GitHub contribution graph.")
     p.add_argument("--word", default=WORD, help=f"word to spell (default: {WORD})")
-    p.add_argument("--year", type=int, default=YEAR, help=f"target year (default: {YEAR})")
+    p.add_argument("--year", default=str(YEAR),
+                   help=f"target year, or an inclusive range like 2016-2019 (default: {YEAR})")
     p.add_argument("--name", default=NAME, help="git author name for --commit")
     p.add_argument("--email", default=EMAIL,
                    help="git author email for --commit (must be VERIFIED on the target account)")
@@ -232,14 +278,19 @@ def parse_args():
 
 def main():
     cfg = parse_args()
+    cfg.years = parse_years(cfg.year)
+    validate_years(cfg.years)
     word = cfg.word.upper()
     rows = glyphs(word)
     slug = "".join(ch for ch in word.lower() if ch.isalnum()) or "art"
+    span = year_label(cfg.years)
 
     if cfg.commit:
         counts = build_counts(rows, cfg)
-        print(f"word={word} year={cfg.year}  lit+noise cells={len(counts)}  "
-              f"total commits≈{sum(counts.values())}")
+        per_year = sum(counts.values())
+        print(f"word={word} year={span}  lit+noise cells={len(counts)}  "
+              f"total commits≈{per_year * len(cfg.years)}"
+              + (f" ({per_year}/year × {len(cfg.years)})" if len(cfg.years) > 1 else ""))
         generate(counts, cfg)
         print("\nNEXT:\n"
               " 1. Create an EMPTY repo on the target account (e.g. 'contribution-art').\n"
@@ -255,7 +306,7 @@ def main():
     else:
         counts = build_counts(rows, cfg)
         out = cfg.out or f"{slug}-graph-preview.png"
-        print(f"word={word} year={cfg.year}  lit+noise cells={len(counts)}  "
+        print(f"word={word} year={span}  lit+noise cells={len(counts)}  "
               f"total commits≈{sum(counts.values())}")
         render_preview(counts, out)
         print("(dry run — rerun with --commit to build the repo, or --banner for the flat banner)")
