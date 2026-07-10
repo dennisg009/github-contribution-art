@@ -1,0 +1,15 @@
+# Generated backdated-commit repo (created by --commit)
+github-art/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Generated PNGs at the repo root (keep the curated ones in examples/)
+/*-graph-preview.png
+/*-linkedin-banner.png
