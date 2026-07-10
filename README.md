@@ -90,6 +90,38 @@ result — a blank graph means no stray green in the "off" pixels.
 > before GitHub existed (2008) are rejected; future years warn, since those
 > squares only fill in as their dates arrive.
 
+### Putting the art on your MAIN account (no throwaway)
+
+If you want this on your real profile, the trick is to aim at an **empty year**
+so the letters don't collide with commits you already have.
+
+1. **Find a quiet year.** Open your profile, use the year switcher on the
+   contribution graph (right-hand side), and look for a year that's mostly grey
+   — often an early year before you were active. Say that's **2019**.
+2. **Build the commits for that year:**
+   ```bash
+   python3 spell_graph.py --commit --word DENNIS --year 2019 \
+       --name "Your Name" --email you@verified.com
+   ```
+   Use an email that is **verified on your main account** (Settings → Emails),
+   or the squares stay grey. This only writes a local `./github-art` folder — it
+   touches nothing on GitHub yet, so it's safe to inspect or delete.
+3. **Make a brand-new EMPTY repo** on your main account (e.g. `contribution-art`)
+   — no README, no license, so the first push is clean.
+4. **Push it:**
+   ```bash
+   cd github-art
+   git branch -M main
+   git remote add origin https://github.com/<YOUR-USERNAME>/contribution-art.git
+   git push -u origin main
+   ```
+5. **Reload your profile** and switch to 2019 — the word should be spelled out.
+
+**Because it's your real account, keep in mind:** this adds a public repo full of
+empty commits, the contributions are permanent unless you delete that repo, and
+picking a year where you *do* have activity will blend your real commits into the
+letters and muddy them. Prefer the emptiest year you can find.
+
 ## Options
 
 | Flag | Default | What it does |
