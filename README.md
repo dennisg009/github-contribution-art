@@ -1,8 +1,8 @@
 # github-contribution-art
 
 Spell a word in the GitHub contribution graph — as a ready-to-upload **LinkedIn
-banner**, as an **organic-looking graph**, or as **real backdated commits** you
-push to a throwaway account.
+banner**, as a **real-looking contribution chart** (with GitHub's month/weekday
+chrome), or as **real backdated commits** you push to a profile.
 
 The contribution graph is just a 7-row (Sun–Sat) × ~53-column (weeks) grid of
 green squares. Line up enough commits on the right days and the squares spell
@@ -11,12 +11,14 @@ just empty and decorative.
 
 ![DENNIS as a LinkedIn banner](examples/dennis-linkedin-banner.png)
 
-Or the "organic" look — varied green shades plus a little faint background
-activity, so it reads like a genuinely busy year rather than obviously-planted
-art (inspired by [Lauren Frailey](https://www.linkedin.com/in/lauren-frailey/)'s
+Or the full contribution-chart look — varied green shades and faint background
+activity, rendered with the real GitHub chrome (month headers, weekday labels,
+the "N contributions in YEAR" heading, and the Less→More legend), so it reads
+like a screenshot of a genuinely busy year rather than obviously-planted art
+(inspired by [Lauren Frailey](https://www.linkedin.com/in/lauren-frailey/)'s
 "MINTLIFY" contribution graph):
 
-![DENNIS as an organic contribution graph](examples/dennis-graph-preview.png)
+![DENNIS as a full GitHub contribution chart](examples/dennis-graph-preview.png)
 
 ## Quick start
 
