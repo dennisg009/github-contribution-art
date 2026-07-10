@@ -13,7 +13,8 @@ just empty and decorative.
 
 Or the "organic" look — varied green shades plus a little faint background
 activity, so it reads like a genuinely busy year rather than obviously-planted
-art (inspired by a Mintlify engineer's "MINTLIFY" contribution graph):
+art (inspired by [Lauren Frailey](https://www.linkedin.com/in/lauren-frailey/)'s
+"MINTLIFY" contribution graph):
 
 ![DENNIS as an organic contribution graph](examples/dennis-graph-preview.png)
 
